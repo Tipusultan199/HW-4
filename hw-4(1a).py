@@ -4,10 +4,26 @@ from mpl_toolkits.mplot3d import Axes3D
 
 # Function to calculate axis-angle representation
 def rotation_matrix_to_axis_angle(R):
+    # Calculate theta (rotation angle)
     theta = np.arccos((np.trace(R) - 1) / 2)
-    omega_hat = (R - R.T) / (2 * np.sin(theta))
-    # Extract the rotation axis from the skew-symmetric matrix
-    omega = np.array([omega_hat[2, 1], omega_hat[0, 2], omega_hat[1, 0]])
+    
+    # Check if theta is close to 0 or pi to handle special cases
+    if np.isclose(theta, 0):
+        # No rotation case
+        omega = np.array([0, 0, 0])  # No unique axis, any axis would work
+    elif np.isclose(theta, np.pi):
+        # Special case when theta is pi (180 degrees)
+        # Find the eigenvector corresponding to the eigenvalue 1 (the rotation axis)
+        eigenvalues, eigenvectors = np.linalg.eig(R)
+        omega = eigenvectors[:, np.isclose(eigenvalues, 1)].flatten()
+    else:
+        # Regular case where sin(theta) is not zero
+        omega_hat = (R - R.T) / (2 * np.sin(theta))
+        omega = np.array([omega_hat[2, 1], omega_hat[0, 2], omega_hat[1, 0]])
+    
+    # Normalize omega
+    omega = omega / np.linalg.norm(omega)
+    
     return omega, theta
 
 # Function to plot the rotation axis
